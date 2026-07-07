@@ -34,7 +34,7 @@ class VehicleModel(Node):
         
         # 发布ground truth pose
         self.pub = self.create_publisher(
-            PoseStamped, '/localization/pose', 10)
+            PoseStamped, '/localization/pose', 50)
         
         # 发布速度 (TwistStamped)
         self.twist_pub = self.create_publisher(

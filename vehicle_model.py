@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, TwistStamped
 from autoware_msgs.msg import Command
 import math
 
@@ -36,6 +36,10 @@ class VehicleModel(Node):
         self.pub = self.create_publisher(
             PoseStamped, '/localization/pose', 10)
         
+        # 发布速度 (TwistStamped)
+        self.twist_pub = self.create_publisher(
+            TwistStamped, '/sim/ground_truth', 10)
+        
         # 定时更新
         self.timer = self.create_wall_timer(
             self.dt, self.step)
@@ -66,3 +70,10 @@ class VehicleModel(Node):
         pose.pose.orientation.z = math.sin(self.yaw / 2.0)
         pose.pose.orientation.w = math.cos(self.yaw / 2.0)
         self.pub.publish(pose)
+        
+        # 发布速度
+        twist = TwistStamped()
+        twist.header.stamp = now
+        twist.header.frame_id = 'map'
+        twist.twist.linear.x = self.speed
+        self.twist_pub.publish(twist)

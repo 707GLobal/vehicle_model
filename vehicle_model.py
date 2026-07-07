@@ -1,7 +1,8 @@
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import PoseStamped, TwistStamped
+from geometry_msgs.msg import PoseStamped
 from autoware_msgs.msg import Command
+from geometry_msgs.msg import TwistStamped
 import math
 
 class VehicleModel(Node):
@@ -30,15 +31,15 @@ class VehicleModel(Node):
         
         # 订阅控制指令
         self.sub = self.create_subscription(
-            Command, '/control/command', self.on_command, 10)
+            Command, '/control/command', self.on_command, 50)
         
         # 发布ground truth pose
         self.pub = self.create_publisher(
             PoseStamped, '/localization/pose', 50)
         
-        # 发布速度 (TwistStamped)
+        #发布速度
         self.twist_pub = self.create_publisher(
-            TwistStamped, '/sim/ground_truth', 10)
+            TwistStamped, '/sim/velocity', 50)
         
         # 定时更新
         self.timer = self.create_wall_timer(
@@ -70,10 +71,28 @@ class VehicleModel(Node):
         pose.pose.orientation.z = math.sin(self.yaw / 2.0)
         pose.pose.orientation.w = math.cos(self.yaw / 2.0)
         self.pub.publish(pose)
-        
-        # 发布速度
+
+
+
+        # 发布TwistStamped
         twist = TwistStamped()
         twist.header.stamp = now
-        twist.header.frame_id = 'map'
+        twist.header.frame_id = 'base_link'
         twist.twist.linear.x = self.speed
+        twist.twist.angular.z = self.speed * math.tan(steer) / self.wheel_base
         self.twist_pub.publish(twist)
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = VehicleModel()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        node.get_logger().info('Shutting down Vehicle Model...')
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()

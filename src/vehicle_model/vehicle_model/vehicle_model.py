@@ -38,7 +38,7 @@ class VehicleModel(Node):
             Odometry, '/sim/ground_truth', 50)
 
         # 定时更新 50Hz
-        self.timer = self.create_wall_timer(self.dt, self.step)
+        self.timer = self.create_timer(self.dt, self.step)
 
     def on_command(self, msg: Command):
         s = msg.speed          # m/s
